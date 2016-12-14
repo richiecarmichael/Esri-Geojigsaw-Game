@@ -1,0 +1,371 @@
+﻿<!DOCTYPE html>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+    <title>Geojigsaw</title>
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no'>
+    <meta name='author' content='Esri' />
+    <meta name='keywords' content='esri geogame puzzle map gis geojigsaw voronoi' />
+    <meta name='description' content='GeoJigsaw is a JS-based web app that allows users to create, rate and play geo-jigsaws puzzles.' />
+    <link type='image/ico' rel='shortcut icon' href='img/favicon.ico' />
+    <link type='image/ico' rel='icon' href='img/favicon.ico' />
+    <link type='image/ico' rel='apple-touch-icon' href='img/apple-touch-icon.png' />
+    <link type='text/css' rel='stylesheet' href='//fast.fonts.com/cssapi/23855eec-5fdf-4594-9898-0113a04bfef0.css' />
+    <link type='text/css' rel='stylesheet' href='//js.arcgis.com/3.11/esri/css/esri.css'>
+    <link type='text/css' rel='stylesheet' href='css/bootstrap.min.css' />
+    <link type='text/css' rel='stylesheet' href='index.css'>
+    <script type='text/javascript' src='js/jquery-2.1.1.min.js'></script>
+    <script type='text/javascript' src='js/debouncedresize.js'></script>
+    <script type='text/javascript' src='js/bootstrap.min.js'></script>
+    <script type='text/javascript' src='js/d3.min.js'></script>
+    <script type='text/javascript' src='js/sylvester.min.js'></script>
+    <script type='text/javascript' src='//js.arcgis.com/3.11compact/'></script>
+    <script type='text/javascript' src='index.js'></script>
+    <script>
+        (function (i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date(); a = s.createElement(o),
+            m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+        ga('create', 'UA-10866840-11', 'auto');
+        ga('send', 'pageview');
+    </script>
+</head>
+<body>
+    <div id='map-container'>
+        <div id='map'></div>
+        <div id='puzzle'>
+            <svg>
+                <defs>
+                    <filter id='innershadow'>
+                        <!-- Shadow Offset -->
+                        <feOffset dx='3' dy='3' />
+                        <!-- Shadow Blur -->
+                        <feGaussianBlur stdDeviation='10' result='offset-blur' />
+                        <!-- Invert the drop shadow to create an inner shadow -->
+                        <feComposite operator='out' in='SourceGraphic' in2='offset-blur' result='inverse' />
+                        <!-- Color & Opacity -->
+                        <feFlood flood-color='black' flood-opacity='1' result='color' />
+                        <!-- Clip color inside shadow -->
+                        <feComposite operator='in' in='color' in2='inverse' result='shadow' />
+                        <!-- Shadow Opacity -->
+                        <feComponentTransfer in='shadow' result='shadow'>
+                            <feFuncA type='linear' slope='.75' />
+                        </feComponentTransfer>
+                        <!-- Put shadow over original object -->
+                        <feComposite operator='over' in='shadow' in2='SourceGraphic' />
+                    </filter>
+                    <filter id='innerbevel'>
+                        <feGaussianBlur in='SourceAlpha' stdDeviation='2' result='blur' />
+
+                        <feOffset in='blur' dy='2' dx='2' />
+                        <feComposite in2='SourceAlpha' operator='arithmetic' k2='-1' k3='1' result='hlDiff' />
+                        <feFlood flood-color='white' flood-opacity='.5' />
+                        <feComposite in2='hlDiff' operator='in' />
+                        <feComposite in2='SourceGraphic' operator='over' result='withGlow' />
+
+                        <feOffset in='blur' dy='-2' dx='-2' />
+                        <feComposite in2='SourceAlpha' operator='arithmetic' k2='-1' k3='1' result='shadowDiff' />
+                        <feFlood flood-color='black' flood-opacity='1' />
+                        <feComposite in2='shadowDiff' operator='in' />
+                        <feComposite in2='withGlow' operator='over' />
+                    </filter>
+                    <filter id='innerbevel_dropshadow'>
+                        <feGaussianBlur in='SourceAlpha' stdDeviation='2' result='blur' />
+
+                        <feOffset dy='1' dx='1' />
+                        <feComposite in2='SourceAlpha' operator='arithmetic' k2='-1' k3='1' result='hlDiff' />
+                        <feFlood flood-color='white' flood-opacity='.5' />
+                        <feComposite in2='hlDiff' operator='in' />
+                        <feComposite in2='SourceGraphic' operator='over' result='withGlow' />
+
+                        <feOffset in='blur' dy='-1' dx='-1' />
+                        <feComposite in2='SourceAlpha' operator='arithmetic' k2='-1' k3='1' result='shadowDiff' />
+                        <feFlood flood-color='black' flood-opacity='1' />
+                        <feComposite in2='shadowDiff' operator='in' />
+                        <feComposite in2='withGlow' operator='over' />
+
+                        <feGaussianBlur in='SourceAlpha' stdDeviation='3' />
+                        <feOffset dx='5' dy='5' result='offsetblur' />
+                        <feComponentTransfer>
+                            <feFuncA type='linear' slope='0.5' />
+                        </feComponentTransfer>
+                        <feMerge>
+                            <feMergeNode />
+                            <feMergeNode in='withGlow' />
+                        </feMerge>
+                    </filter>
+                </defs>
+                <g>
+                </g>
+            </svg>
+        </div>
+    </div>
+    <div id='top'>
+        <div id='logo-title'>Geojigsaw</div>
+        <!--<div id='logo-esri'></div>-->
+        <a id='logo-esri' href='http://www.esri.com' target='_blank'>
+            <img src='img/logo-med.png' alt='esri' height='36'>
+        </a>
+    </div>
+    <div id='panel-browse' class='rc-panel'>
+        <div class='rc-panel-group-title'>Browse</div>
+        <div class='rc-panel-group-list' data-toggle='buttons'>
+            <label class='btn btn-default active'>
+                <input type='radio' name='sort' value='map' checked> Map
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='sort' value='popular'> Popular
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='sort' value='newest'> Newest
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='sort' value='oldest'> Oldest
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='sort' value='highest rating'> Highest Rating
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='sort' value='lowest rating'> Lowest Rating
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='sort' value='easiest'> Easiest
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='sort' value='hardest'> Hardest
+            </label>
+        </div>
+        <div class='rc-panel-group-title'>Create</div>
+        <div class='rc-panel-group-list'>
+            <button id='button-browse-create' type='button' class='btn btn-primary'>Start</button>
+        </div>
+    </div>
+    <div id='panel-create' class='rc-panel'>
+        <div class='rc-panel-group-title'>Basemap</div>
+        <div class='rc-panel-group-list' data-toggle='buttons'>
+            <label class='btn btn-default'>
+                <input type='radio' name='basemap' value='satellite'> Imagery
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='basemap' value='national-geographic'> Nat Geo
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='basemap' value='streets'> Street
+            </label>
+        </div>
+        <div class='rc-panel-group-title'>Difficulty</div>
+        <div class='rc-panel-group-list' data-toggle='buttons'>
+            <label class='btn btn-default'>
+                <input type='radio' name='difficulty' value='3'> Easy
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='difficulty' value='6'> Hard
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='difficulty' value='8'> Insane
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='difficulty' value='10'> Impossible
+            </label>
+        </div>
+        <div class='rc-panel-group-title'>Options</div>
+        <div class='rc-panel-group-list' data-toggle='buttons'>
+            <label id='button-create-options-rotation' class='btn btn-default'>
+                <input type='checkbox'> Rotation
+            </label>
+            <label id='button-create-options-hints' class='btn btn-default'>
+                <input type='checkbox'> Hints
+            </label>
+        </div>
+        <div class='rc-panel-group-list rc-align-bottom'>
+            <button id='button-create-create' type='button' class='btn btn-primary'>Create</button>
+            <button id='button-create-back' type='button' class='btn btn-danger'>Back</button>
+        </div>
+    </div>
+    <div id='panel-share' class='rc-panel'>
+        <div class='rc-panel-group-list'>
+            <button id='button-share-play' type='button' class='btn btn-primary'>Play</button>
+            <button id='button-share-share' type='button' class='btn btn-primary'>Share</button>
+            <button id='button-share-back' type='button' class='btn btn-danger'>Back</button>
+        </div>
+    </div>
+    <div id='panel-open' class='rc-panel'>
+        <div class='rc-panel-group-title'>About</div>
+        <div class='rc-panel-group-list'>
+            <div>
+                <div class='rc-panel-group-item-heading'>Size</div>
+                <div id='panel-open-size' class='rc-panel-group-item-value'></div>
+            </div>
+            <div>
+                <div class='rc-panel-group-item-heading'>Map</div>
+                <div id='panel-open-basemap' class='rc-panel-group-item-value'></div>
+            </div>
+            <div>
+                <div class='rc-panel-group-item-heading'>Created</div>
+                <div id='panel-open-created' class='rc-panel-group-item-value'></div>
+            </div>
+            <div>
+                <div class='rc-panel-group-item-heading'>Played</div>
+                <div id='panel-open-played' class='rc-panel-group-item-value'></div>
+            </div>
+            <div>
+                <div class='rc-panel-group-item-heading'>Rated</div>
+                <div id='panel-open-rated' class='rc-panel-group-item-value'></div>
+            </div>
+            <div>
+                <div class='rc-panel-group-item-heading'>Average</div>
+                <div id='panel-open-average' class='rc-panel-group-item-value'></div>
+            </div>
+            <div>
+                <div class='rc-panel-group-item-heading'>Worst</div>
+                <div id='panel-open-slowest' class='rc-panel-group-item-value'></div>
+            </div>
+            <div>
+                <div class='rc-panel-group-item-heading'>Best</div>
+                <div id='panel-open-fastest' class='rc-panel-group-item-value'></div>
+            </div>
+            <div>
+                <div class='rc-panel-group-item-heading'>Rotation</div>
+                <div id='panel-open-rotation' class='rc-panel-group-item-value'></div>
+            </div>
+            <div>
+                <div class='rc-panel-group-item-heading'>Hints</div>
+                <div id='panel-open-hints' class='rc-panel-group-item-value'></div>
+            </div>
+        </div>
+        <div class='rc-panel-group-title'>Rate</div>
+        <div class='rc-panel-group-list' data-toggle='buttons'>
+            <label class='btn btn-default'>
+                <input type='radio' name='rate' value='5'> Love it
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='rate' value='4'> Really like it
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='rate' value='3'> Like it
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='rate' value='2'> Didn't like it
+            </label>
+            <label class='btn btn-default'>
+                <input type='radio' name='rate' value='1'> Hate it
+            </label>
+        </div>
+        <div class='rc-panel-group-title'>Play</div>
+        <div class='rc-panel-group-list'>
+            <button id='button-open-play' type='button' class='btn btn-primary'>Start</button>
+            <button id='button-open-back' type='button' class='btn btn-danger'>Back</button>
+        </div>
+    </div>
+    <div id='panel-play' class='rc-panel'>
+        <div class='rc-panel-group-title'>Time</div>
+        <div class='rc-panel-group-list'>
+            <div id='score-time'>0:00:00</div>
+            <div id='score-best'>HIGH -:--.--</div>
+        </div>
+        <div id='panel-play-hints-title' class='rc-panel-group-title'>Hints</div>
+        <div id='panel-play-hints-buttons' class='rc-panel-group-list' data-toggle='buttons'>
+            <label id='button-play-hint-peak' class='btn btn-default'>
+                <input type='checkbox'> Peak
+            </label>
+            <label id='button-play-hint-cheat' class='btn btn-default'>
+                <input type='checkbox'> Cheat
+            </label>
+            <label id='button-play-hint-freeze' class='btn btn-default'>
+                <input type='checkbox'> Freeze
+            </label>
+        </div>
+        <div class='rc-panel-group-list rc-align-bottom'>
+            <button id='button-play-pause' type='button' class='btn btn-primary'>Pause</button>
+            <button id='button-play-quit' type='button' class='btn btn-danger'>Quit</button>
+        </div>
+    </div>
+    <div id='panel-score' class='rc-panel'>
+        <div class='rc-panel-group-title'>Time</div>
+        <div id='final-time'>--:--.-</div>
+        <div class='rc-panel-group-title'>Rank</div>
+        <div id='ranking'>-/-</div>
+        <div class='rc-panel-group-title'>Awards</div>
+        <div id='awards-container'>
+            <svg width='125' height='570'>
+                <defs>
+                    <filter id='emboss'>
+                        <feGaussianBlur in='SourceAlpha' stdDeviation='2' result='blur'></feGaussianBlur>
+                        <feOffset in='blur' dy='2' dx='2'></feOffset>
+                        <feComposite in2='SourceAlpha' operator='arithmetic' k2='-1' k3='1' result='hlDiff'></feComposite>
+                        <feFlood flood-color='white' flood-opacity='.5'></feFlood>
+                        <feComposite in2='hlDiff' operator='in'></feComposite>
+                        <feComposite in2='SourceGraphic' operator='over' result='withGlow'></feComposite>
+                        <feOffset in='blur' dy='-2' dx='-2'></feOffset>
+                        <feComposite in2='SourceAlpha' operator='arithmetic' k2='-1' k3='1' result='shadowDiff'></feComposite>
+                        <feFlood flood-color='black' flood-opacity='1'></feFlood>
+                        <feComposite in2='shadowDiff' operator='in'></feComposite>
+                        <feComposite in2='withGlow' operator='over'></feComposite>
+                    </filter>
+                    <filter id='inset'>
+                        <feGaussianBlur in='SourceAlpha' stdDeviation='2' result='blur'></feGaussianBlur>
+                        <feOffset in='blur' dy='2' dx='2'></feOffset>
+                        <feComposite in2='SourceAlpha' operator='arithmetic' k2='-1' k3='1' result='hlDiff'></feComposite>
+                        <feFlood flood-color='black' flood-opacity='1'></feFlood>
+                        <feComposite in2='hlDiff' operator='in'></feComposite>
+                        <feComposite in2='SourceGraphic' operator='over'></feComposite>
+                    </filter>
+                    <pattern id='award' patternUnits='userSpaceOnUse' patternTransform='translate(0, 85)' width='124' height='583'>
+                        <image preserveAspectRatio='none meet' width='124' height='583' xlink:href='img/award-texture.png' />
+                    </pattern>
+                </defs>
+                <g transform='translate(-360,-85)'>
+                    <path id='puzzle-award-1' class='rc-award' d='M376 134 C 363 133 362 146 375 147 L 374 168 L 396 188 L 416 181 C 411 168 423 163 428 176 L 448 168 L 449 166 L 445 147 C 432 150 430 137 443 134 L 439 116 L 424 110 C 428 98 416 93 411 105 L 396 100 L 378 113Z'></path>
+                    <path id='puzzle-award-2' class='rc-award' d='M390 209 C 377 205 373 218 386 222 L 380 243 L 381 244 L 407 246 C 408 233 422 234 421 247 L 447 249 L 458 239 L 454 210 C 441 212 439 199 452 197 L 448 168 L 428 176 C 423 163 411 168 416 181 L 396 188Z'></path>
+                    <path id='puzzle-award-3' class='rc-award' d='M380 268 C 366 267 365 280 379 281 L 377 304 L 408 305 C 408 292 421 292 421 305 L 451 306 L 453 305 L 451 284 C 437 285 436 272 449 270 L 447 249 L 421 247 C 422 234 408 233 407 246 L 381 244Z'></path>
+                    <path id='puzzle-award-4' class='rc-award' d='M376 306 L 385 328 C 372 333 377 346 389 341 L 397 364 L 413 365 C 413 351 427 352 426 365 L 441 366 L 445 343 C 432 341 434 327 447 329 L 451 306 L 421 305 C 421 292 408 292 408 305 L 377 304Z'></path>
+                    <path id='puzzle-award-5' class='rc-award' d='M378 389 L 382 411 C 369 413 371 427 385 424 L 389 446 L 391 447 L 413 445 C 411 432 425 430 426 443 L 448 441 L 453 420 C 440 416 443 403 456 407 L 462 385 L 441 366 L 426 365 C 427 352 413 351 413 365 L 397 364Z'></path>
+                    <path id='puzzle-award-6' class='rc-award' d='M391 470 C 378 470 377 483 391 483 L 391 505 L 396 513 L 420 515 C 421 501 434 502 433 516 L 457 518 L 471 499 L 463 477 C 451 482 446 469 459 465 L 451 444 L 448 441 L 426 443 C 425 430 411 432 413 445 L 391 447Z'></path>
+                    <path id='puzzle-award-7' class='rc-award' d='M394 533 C 381 532 380 545 393 546 L 392 566 L 412 573 C 416 560 429 564 425 577 L 446 583 L 460 572 L 459 551 C 445 552 445 539 458 538 L 457 518 L 433 516 C 434 502 421 501 420 515 L 396 513Z'></path>
+                    <path id='puzzle-award-8' class='rc-award' d='M373 597 C 360 595 357 608 371 610 L 367 633 L 394 650 L 411 647 C 408 634 422 632 424 645 L 441 642 L 443 619 C 429 618 431 605 444 606 L 446 583 L 425 577 C 429 564 416 560 412 573 L 392 566 L 377 574Z'></path>
+                </g>
+            </svg>
+        </div>
+        <div class='rc-panel-group-list rc-align-bottom'>
+            <button id='button-score-back' type='button' class='btn btn-danger'>Back</button>
+        </div>
+    </div>
+    <div id='panel-puzzle-list'></div>
+    <div id='dialog-create-scale-warning' class='modal fade' tabindex='-1' role='dialog' aria-hidden='true'>
+        <div class='modal-dialog modal-sm'>
+            <div class='modal-content'>
+                <div class='modal-header'>
+                    <button type='button' class='close' data-dismiss='modal'><span aria-hidden='true'>&times;</span><span class='sr-only'>Close</span></button>
+                    <h4 class='modal-title' id='myModalLabel'>Scale Warning</h4>
+                </div>
+                <div class='modal-body'>
+Large scale GeoJigsaws are not permitted. Please zoom in closer by double clicking the map, using the "+" button or clicking the "Zoom" button below to automatically adjust the map to the correct scale.
+                </div>
+                <div class='modal-footer'>
+                    <button type='button' class='btn btn-default' data-dismiss='modal'>Close</button>
+                    <button id='button-scale-warning-zoom' type='button' class='btn btn-danger' data-dismiss='modal'>Zoom</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id='dialog-play-pause' class='modal fade' tabindex='-1' role='dialog' aria-hidden='true'>
+        <div class='modal-dialog modal-sm'>
+            <div class='modal-content'>
+                <div class='modal-header'>
+                    <button type='button' class='close' data-dismiss='modal'><span aria-hidden='true'>&times;</span><span class='sr-only'>Close</span></button>
+                    <h4 class='modal-title' id='myModalLabel'>Game Paused</h4>
+                </div>
+                <div class='modal-body'>
+To resume the puzzle, please click the map or dismiss this dialog.
+                </div>
+                <div class='modal-footer'>
+                    <button type='button' class='btn btn-success' data-dismiss='modal'>Resume</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

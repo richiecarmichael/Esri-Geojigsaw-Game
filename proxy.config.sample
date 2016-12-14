@@ -1,0 +1,9 @@
+﻿<?xml version='1.0' encoding='utf-8' ?>
+<ProxyConfig allowedReferers='https://maps.esri.com/rc/puzzle' mustMatch='true'>
+  <serverUrls>
+    <serverUrl url='https://services.arcgis.com/6DIQcwlPy8knb6sg/arcgis/rest/services/Jigsaw_Games/FeatureServer/0' matchAll='true' clientId='' clientSecret=''/>
+    <serverUrl url='https://services.arcgis.com/6DIQcwlPy8knb6sg/ArcGIS/rest/services/Jigsaw_Puzzles/FeatureServer/0' matchAll='true' clientId='' clientSecret=''/>
+    <serverUrl url='https://services.arcgis.com/6DIQcwlPy8knb6sg/ArcGIS/rest/services/Jigsaw_Ratings/FeatureServer/0' matchAll='true' clientId='' clientSecret=''/> 
+  </serverUrls>
+</ProxyConfig>
+<!-- See https://github.com/Esri/resource-proxy for more information -->

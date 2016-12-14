@@ -1,0 +1,236 @@
+﻿html, body {
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    /*
+        Avenir LT W01 35 Light
+        Avenir LT W01 65 Medium
+        Avenir LT W01 85 Heavy
+        Avenir LT W01 45 Book
+        Avenir LT W01 55 Roman
+        AvenirLTW01-55Oblique
+        Avenir Next W01 Thin
+        AvenirNextLTW01-Heavy
+    */
+    font-family: 'Avenir LT W01 35 Light', Arial, Helvetica, sans-serif;
+    text-rendering: optimizeLegibility;
+}
+
+#map-container {
+    position: absolute;
+    top: 50px;
+    left: 0px;
+    bottom: 0px;
+    right: 0px;
+}
+
+#map {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    bottom: 0px;
+    right: 0px;
+}
+
+#puzzle {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    bottom: 0px;
+    right: 0px;
+    pointer-events: none;
+}
+
+#top {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+    height: 50px;
+    background-color: #46494E;
+}
+
+#logo-title {
+    position: absolute;
+    left: 10px;
+    top:3px;
+    font-size: 32px;
+    color: #fff;
+}
+
+#logo-esri {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}
+
+.rc-panel {
+    position: absolute;
+    top: 50px;
+    left: 0px;
+    width: 125px;
+    bottom: 0px;
+    background-color: #46494E;
+    margin-left: -125px;
+}
+
+.rc-panel-group-title {
+    color: #ff6a00;
+    font-size: 22px;
+    text-align: left;
+    pointer-events: none;
+    width: 125px;
+    padding: 5px 0px 5px 12px;
+}
+
+.rc-panel-group-title:not(:first-child) {
+    margin-top: 15px;
+}
+
+.rc-panel-group-list {
+    display: block;
+}
+
+.rc-panel-group-item-heading {
+    margin-left: 10px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+    width: 50px;
+}
+
+.rc-panel-group-item-value {
+    color: #fff;
+    font-size: 12px;
+    display: inline-block;
+}
+
+.rc-panel-group-list > label {
+    display: block;
+    width: 125px;
+    border-radius: 0px 0px 0px 0px;
+    border-width: 0px 0px 0px 0px;
+    background-color: transparent;
+    color: #fff;
+    text-align: left;
+}
+
+.rc-panel-group-list > label:hover {
+    background-color: transparent;
+    color: #ff6a00;
+}
+
+.rc-panel-group-list > label.active,
+.rc-panel-group-list > label.active:hover {
+    background-color: #ff6a00;
+    color: white;
+}
+
+.rc-panel-group-list > label[disabled].active {
+    background-color: black;
+    color: #ff6a00;
+}
+
+.rc-panel-group-list > button {
+    width: 105px;
+    margin: 0px 0px 0px 10px; 
+    border-radius: 0px 0px 0px 0px;
+    display: block;
+    float: none;
+    max-width: 100%;
+    position: relative;
+}
+
+.rc-panel-group-list > button:first-child {
+    margin-top: 10px;
+}
+
+.rc-align-bottom {
+    position: absolute;
+    left: 0px;
+    bottom: 10px;
+}
+
+#map_zoom_slider {
+    margin-left: 125px;
+}
+
+#score-time, #ranking, #final-time {
+    margin-left: 10px;
+    width: 90px;
+    font-size: 22px;
+    text-align: center;
+    font-family: 'AvenirNextLTW01-Heavy';
+    color: #fff;
+}
+
+#score-limit {
+    margin-left: 10px;
+    width: 90px;
+    font-size: 14px;
+    text-align: center;
+    color: white;
+}
+
+#score-best {
+    margin-left: 10px;
+    width: 90px;
+    font-size: 14px;
+    text-align: center;
+    color: white;
+}
+
+#puzzle_layer > path {
+    fill: #ff0;
+    fill-opacity: 0.7;
+    stroke-width: 0;
+}
+
+#puzzle_layer > path:hover {
+    fill: #ffa500;
+    fill-opacity: 0.7;
+    stroke-width: 0;
+    cursor: pointer;
+}
+
+#panel-puzzle-list {
+    position: absolute;
+    top: 55px;
+    left: 125px;
+    right: 0px;
+    bottom: 0px;
+    overflow-y: auto;
+    z-index: 31;
+    display: none;
+}
+
+.rc-chicklet-heading {
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+    width: 50px;
+}
+
+.rc-chicklet-value {
+    color: #fff;
+    font-size: 12px;
+    display: inline-block;
+    width: 70px;
+}
+
+#awards-container {
+    position: absolute;
+    top: 213px;
+    left: 0px;
+    right: 0px;
+    bottom: 55px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#dialog-create-scale-warning, #dialog-play-pause {
+    overflow-y: hidden;
+}
